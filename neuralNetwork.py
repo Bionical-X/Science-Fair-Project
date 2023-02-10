@@ -6,14 +6,13 @@ class neuralNetwork:
     def __init__(self, neurons_list):
         self.layers = []
         for i in neurons_list:
-            self.layers.append(Layer_Dense(i)
-                
-
+            self.layers.append(Layer_Dense(i))
+        
     #This is the function where you pass in inputs
-    def forward(inputs):
+    def  forward(self, inputs):
         #initilizing the activation functions
-        activation = Activation_ReLU
-        softMax = Activation_softmax
+        activation = Activation_ReLU()
+        softMax = Activation_softmax()
 
         #Go through hidden layers passing in data
         for i in range(len(self.layers)-1):
@@ -22,9 +21,9 @@ class neuralNetwork:
 
         #adjusting final layer
         self.layers[len(self.layers)].forward(inputs)
-        self.outputs = activation(self.layers[len(self.layers).output]
+        self.outputs = activation(self.layers[len(self.layers).output])
 
-    def getOutput():
+    def getOutput(self):
         return self.outputs
 
 
@@ -56,5 +55,4 @@ network = neuralNetwork([3,2])
 inputs = [0.1,0.2,0.3]
 
 network.forward(inputs)
-print(network.getOutputs)
-
+print(network.getOutput())
