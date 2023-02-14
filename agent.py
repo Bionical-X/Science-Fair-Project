@@ -30,6 +30,11 @@ class Agent:
         point_r = Point(head.x+20, head.y)
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
+        
+        point_l2 = Point(head.x-40, head.y)
+        point_r2 = Point(head.x+40, head.y)
+        point_u2 = Point(head.x, head.y - 40)
+        point_d2 = Point(head.x, head.y + 40)
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -39,22 +44,22 @@ class Agent:
         # I am hard coding this for now probs fix later
         state = [
                 # Danger straight
-                (dir_r and game.is_collision(point_r)) or
-                (dir_l and game.is_collision(point_l)) or
-                (dir_u and game.is_collision(point_u)) or
-                (dir_d and game.is_collision(point_d)),
+                (dir_r and (game.is_collision(point_r) or game.is_collision(point_r2))) or
+                (dir_l and (game.is_collision(point_l) or game.is_collision(point_l2))) or
+                (dir_u and (game.is_collision(point_u) or game.is_collision(point_u2))) or
+                (dir_d and (game.is_collision(point_d) or game.is_collision(point_d2))),
 
                 # Danger right
-                (dir_u and game.is_collision(point_r)) or 
-                (dir_d and game.is_collision(point_l)) or 
-                (dir_l and game.is_collision(point_u)) or 
-                (dir_r and game.is_collision(point_d)),
+                (dir_r and (game.is_collision(point_d) or game.is_collision(point_d2))) or
+                (dir_l and (game.is_collision(point_u) or game.is_collision(point_u2))) or
+                (dir_u and (game.is_collision(point_r) or game.is_collision(point_r2))) or
+                (dir_d and (game.is_collision(point_l) or game.is_collision(point_l2))),
 
                 # Danger left
-                (dir_d and game.is_collision(point_r)) or 
-                (dir_u and game.is_collision(point_l)) or 
-                (dir_r and game.is_collision(point_u)) or 
-                (dir_l and game.is_collision(point_d)),
+                (dir_r and (game.is_collision(point_u) or game.is_collision(point_u2))) or
+                (dir_l and (game.is_collision(point_d) or game.is_collision(point_d2))) or
+                (dir_u and (game.is_collision(point_l) or game.is_collision(point_l2))) or
+                (dir_d and (game.is_collision(point_r) or game.is_collision(point_r2))),
 
                 #Move direction
                 dir_l,
