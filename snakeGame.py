@@ -18,10 +18,11 @@ Point = namedtuple('Point', 'x, y')
 
 #hazards
 moving_blocks = []
-move = False
+move = True
 
 #Walls
 wall_positions = []
+wall = True
 
 
 
@@ -33,7 +34,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-SPEED = 40
+SPEED = 1000
 
 class SnakeGameAI:
 
@@ -67,9 +68,11 @@ class SnakeGameAI:
     def _place_food(self):
         x = random.randint(0, (self.w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
         y = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
-        wallX = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
-        wallY = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
-        wall_positions.append(Point(wallX, wallY))
+
+        if wall:
+            wallX = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
+            wallY = random.randint(0, (self.h-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
+            wall_positions.append(Point(wallX, wallY))
         if move:
             blockX = random.randint(0, (self.w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
             blockY = random.randint(0, (self.w-BLOCK_SIZE )//BLOCK_SIZE )*BLOCK_SIZE
@@ -211,7 +214,7 @@ class movingBlock:
                         self.Xdirection *= -1
                 if self.YPosition < 0 or self.YPosition > height-BLOCK_SIZE:
                         self.Ydirection *= -1
-                if [self.XPosition, self.YPosition] in snakeBody:
+                if Point(self.XPosition, self.YPosition) in snakeBody:
                         self.Ydirection *= -1
                         self.YPosition += self.Ydirection*10
                         self.Xdirection *= -1

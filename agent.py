@@ -18,7 +18,7 @@ class Agent:
         #gamma has to be value smaller than 1.0
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(11,625,3)
+        self.model = Linear_QNet(14,625,3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         
         # model, trainer
@@ -30,11 +30,16 @@ class Agent:
         point_r = Point(head.x+20, head.y)
         point_u = Point(head.x, head.y - 20)
         point_d = Point(head.x, head.y + 20)
-        
+
         point_l2 = Point(head.x-40, head.y)
         point_r2 = Point(head.x+40, head.y)
         point_u2 = Point(head.x, head.y - 40)
         point_d2 = Point(head.x, head.y + 40)
+
+        point_l3 = Point(head.x-60, head.y)
+        point_r3 = Point(head.x+60, head.y)
+        point_u3 = Point(head.x, head.y - 60)
+        point_d3 = Point(head.x, head.y + 60)
 
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
@@ -44,22 +49,41 @@ class Agent:
         # I am hard coding this for now probs fix later
         state = [
                 # Danger straight
-                (dir_r and (game.is_collision(point_r) or game.is_collision(point_r2))) or
-                (dir_l and (game.is_collision(point_l) or game.is_collision(point_l2))) or
-                (dir_u and (game.is_collision(point_u) or game.is_collision(point_u2))) or
-                (dir_d and (game.is_collision(point_d) or game.is_collision(point_d2))),
+                (dir_r and game.is_collision(point_r)) or
+                (dir_l and game.is_collision(point_l)) or
+                (dir_u and game.is_collision(point_u)) or
+                (dir_d and game.is_collision(point_d)),
 
                 # Danger right
-                (dir_r and (game.is_collision(point_d) or game.is_collision(point_d2))) or
-                (dir_l and (game.is_collision(point_u) or game.is_collision(point_u2))) or
-                (dir_u and (game.is_collision(point_r) or game.is_collision(point_r2))) or
-                (dir_d and (game.is_collision(point_l) or game.is_collision(point_l2))),
+                (dir_u and game.is_collision(point_r)) or 
+                (dir_d and game.is_collision(point_l)) or 
+                (dir_l and game.is_collision(point_u)) or 
+                (dir_r and game.is_collision(point_d)),
 
                 # Danger left
-                (dir_r and (game.is_collision(point_u) or game.is_collision(point_u2))) or
-                (dir_l and (game.is_collision(point_d) or game.is_collision(point_d2))) or
-                (dir_u and (game.is_collision(point_l) or game.is_collision(point_l2))) or
-                (dir_d and (game.is_collision(point_r) or game.is_collision(point_r2))),
+                (dir_d and game.is_collision(point_r)) or 
+                (dir_u and game.is_collision(point_l)) or 
+                (dir_r and game.is_collision(point_u)) or 
+                (dir_l and game.is_collision(point_d)),
+
+                # Danger straight
+                (dir_r and game.is_collision(point_r2)) or
+                (dir_l and game.is_collision(point_l2)) or
+                (dir_u and game.is_collision(point_u2)) or
+                (dir_d and game.is_collision(point_d2)),
+
+                # Danger right
+                (dir_u and game.is_collision(point_r2)) or 
+                (dir_d and game.is_collision(point_l2)) or 
+                (dir_l and game.is_collision(point_u2)) or 
+                (dir_r and game.is_collision(point_d2)),
+
+                # Danger left
+                (dir_d and game.is_collision(point_r2)) or 
+                (dir_u and game.is_collision(point_l2)) or 
+                (dir_r and game.is_collision(point_u2)) or 
+                (dir_l and game.is_collision(point_d2)),
+
 
                 #Move direction
                 dir_l,
