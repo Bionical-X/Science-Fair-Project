@@ -5,7 +5,6 @@ from collections import namedtuple
 import numpy as np
 
 pygame.init()
-#font = pygame.font.Font('arial.ttf', 25)
 font = pygame.font.SysFont('arial', 25)
 
 class Direction(Enum):
@@ -16,14 +15,14 @@ class Direction(Enum):
 
 Point = namedtuple('Point', 'x, y')
 
-#hazards
+#hazards:
+#moving walls
 moving_blocks = []
 move = True
 
 #Walls
 wall_positions = []
 wall = True
-
 
 
 # rgb colors
@@ -34,6 +33,7 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
+#Game iteration speed
 SPEED = 1000
 
 class SnakeGameAI:
@@ -101,8 +101,6 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
         for block in moving_blocks:
             block.move(self.w, self.h,self.snake)
-
-        # 3. paint blocks
         
         # 3. check if game over
         reward = 0
@@ -196,8 +194,6 @@ class SnakeGameAI:
             y -= BLOCK_SIZE
 
         self.head = Point(x, y)
-
-
 
 
 class movingBlock:
