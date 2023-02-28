@@ -5,6 +5,7 @@ from collections import namedtuple
 import numpy as np
 
 pygame.init()
+#font = pygame.font.Font('arial.ttf', 25)
 font = pygame.font.SysFont('arial', 25)
 
 class Direction(Enum):
@@ -15,14 +16,18 @@ class Direction(Enum):
 
 Point = namedtuple('Point', 'x, y')
 
-#hazards:
-#moving walls
+#Hazards
 moving_blocks = []
-move = True
+move = False
 
 #Walls
 wall_positions = []
-wall = True
+wall = False
+
+#Cargo
+cargo = False
+
+fun = True
 
 
 # rgb colors
@@ -33,7 +38,6 @@ BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
 
 BLOCK_SIZE = 20
-#Game iteration speed
 SPEED = 1000
 
 class SnakeGameAI:
@@ -46,6 +50,8 @@ class SnakeGameAI:
         pygame.display.set_caption('Snake')
         self.clock = pygame.time.Clock()
         self.reset()
+        self.fun = True
+        
 
 
     def reset(self):
@@ -53,9 +59,12 @@ class SnakeGameAI:
         self.direction = Direction.RIGHT
 
         self.head = Point(self.w/2, self.h/2)
-        self.snake = [self.head,
-                      Point(self.head.x-BLOCK_SIZE, self.head.y),
-                      Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
+        if cargo:
+            self.snake = [self.head,
+                          Point(self.head.x-BLOCK_SIZE, self.head.y),
+                          Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
+        else:
+            self.snake = [self.head]
 
         self.score = 0
         self.food = None
@@ -101,12 +110,16 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
         for block in moving_blocks:
             block.move(self.w, self.h,self.snake)
+
+        # 3. paint blocks
         
         # 3. check if game over
         reward = 0
         game_over = False
             
-        if self.is_collision() or self.frame_iteration > 100*len(self.snake):
+        if self.is_collision() or (
+        self.frame_iteration > 100*len(self.snake) and cargo) or (
+        self.frame_iteration >5000 and not cargo):
             game_over = True
             reward = -10
             return reward, game_over, self.score
@@ -116,6 +129,8 @@ class SnakeGameAI:
             self.score += 1
             reward = 10
             self._place_food()
+            if (not cargo):
+                self.snake.pop()
         else:
             self.snake.pop()
         
@@ -133,8 +148,9 @@ class SnakeGameAI:
         if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
             return True
         # hits itself
-        if pt in self.snake[1:]:
-            return True
+        if cargo:
+            if pt in self.snake[1:]:
+                return True
         if pt in wall_positions:
             return True
         for block in moving_blocks:
@@ -194,6 +210,8 @@ class SnakeGameAI:
             y -= BLOCK_SIZE
 
         self.head = Point(x, y)
+
+
 
 
 class movingBlock:
