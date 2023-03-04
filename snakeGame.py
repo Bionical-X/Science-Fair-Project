@@ -5,6 +5,7 @@ from collections import namedtuple
 import numpy as np
 
 pygame.init()
+
 font = pygame.font.SysFont('arial', 25)
 
 class Direction(Enum):
@@ -15,14 +16,17 @@ class Direction(Enum):
 
 Point = namedtuple('Point', 'x, y')
 
-#hazards:
-#moving walls
+#Hazards
 moving_blocks = []
-move = True
+move = False
 
 #Walls
 wall_positions = []
-wall = True
+wall = False
+
+#Cargo
+cargo = True
+fun = True
 
 
 # rgb colors
@@ -31,10 +35,10 @@ RED = (200,0,0)
 BLUE1 = (0, 0, 255)
 BLUE2 = (0, 100, 255)
 BLACK = (0,0,0)
+BROWN = (165,42,42)
 
 BLOCK_SIZE = 20
-#Game iteration speed
-SPEED = 1000
+SPEED = 10000
 
 class SnakeGameAI:
 
@@ -43,9 +47,11 @@ class SnakeGameAI:
         self.h = h
         # init display
         self.display = pygame.display.set_mode((self.w, self.h))
-        pygame.display.set_caption('Snake')
+        pygame.display.set_caption('Simulation')
         self.clock = pygame.time.Clock()
         self.reset()
+        self.fun = True
+        
 
 
     def reset(self):
@@ -53,9 +59,12 @@ class SnakeGameAI:
         self.direction = Direction.RIGHT
 
         self.head = Point(self.w/2, self.h/2)
-        self.snake = [self.head,
-                      Point(self.head.x-BLOCK_SIZE, self.head.y),
-                      Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
+        if cargo:
+            self.snake = [self.head,
+                          Point(self.head.x-BLOCK_SIZE, self.head.y),
+                          Point(self.head.x-(2*BLOCK_SIZE), self.head.y)]
+        else:
+            self.snake = [self.head]
 
         self.score = 0
         self.food = None
@@ -101,12 +110,15 @@ class SnakeGameAI:
         self.snake.insert(0, self.head)
         for block in moving_blocks:
             block.move(self.w, self.h,self.snake)
+
+        # 3. paint blocks
         
         # 3. check if game over
         reward = 0
         game_over = False
             
-        if self.is_collision() or self.frame_iteration > 100*len(self.snake):
+        if self.is_collision() or (
+        self.frame_iteration > 200*len(self.snake)):
             game_over = True
             reward = -10
             return reward, game_over, self.score
@@ -115,7 +127,10 @@ class SnakeGameAI:
         if self.head == self.food:
             self.score += 1
             reward = 10
+            self.frame_iteration = 0
             self._place_food()
+            if (not cargo):
+                self.snake.pop()
         else:
             self.snake.pop()
         
@@ -133,12 +148,13 @@ class SnakeGameAI:
         if pt.x > self.w - BLOCK_SIZE or pt.x < 0 or pt.y > self.h - BLOCK_SIZE or pt.y < 0:
             return True
         # hits itself
-        if pt in self.snake[1:]:
-            return True
+        if cargo:
+            if pt in self.snake[1:]:
+                return True
         if pt in wall_positions:
             return True
         for block in moving_blocks:
-            val = block.kill(self.snake)
+            val = block.kill(pt)
             if val:
                 return val
         
@@ -149,12 +165,16 @@ class SnakeGameAI:
     def _update_ui(self):
         self.display.fill(BLACK)
 
-        for pt in self.snake:
-            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
-            pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
         for block in moving_blocks:
             block.paint(self.display)
-
+        for pt in self.snake:
+            pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+            pygame.draw.rect(self.display, BROWN, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            if pt == self.snake[0]:      
+                pygame.draw.rect(self.display, BLUE1, pygame.Rect(pt.x, pt.y, BLOCK_SIZE, BLOCK_SIZE))
+                pygame.draw.rect(self.display, BLUE2, pygame.Rect(pt.x+4, pt.y+4, 12, 12))
+            
+            
         for wall in wall_positions:
             pygame.draw.rect(self.display, WHITE, pygame.Rect(wall[0],wall[1],BLOCK_SIZE, BLOCK_SIZE))
 
@@ -196,6 +216,8 @@ class SnakeGameAI:
         self.head = Point(x, y)
 
 
+
+
 class movingBlock:
         def __init__(self, positionX, positionY):
                 self.active = True
@@ -210,15 +232,15 @@ class movingBlock:
                         self.Xdirection *= -1
                 if self.YPosition < 0 or self.YPosition > height-BLOCK_SIZE:
                         self.Ydirection *= -1
-                if Point(self.XPosition, self.YPosition) in snakeBody:
+                if Point(self.XPosition, self.YPosition) in snakeBody[1:]:
                         self.Ydirection *= -1
                         self.YPosition += self.Ydirection*10
                         self.Xdirection *= -1
                         self.XPosition += self.Xdirection*10
         def kill(self, snake):
-                if self.XPosition == snake[0][0] and self.YPosition == snake[0][1]:
-                    return True
-                return False
+            if self.XPosition == snake.x and self.YPosition == snake.y:
+                return True
+            return False
         def paint(self, display):
                 pygame.draw.rect(display, WHITE, pygame.Rect(self.XPosition, self.YPosition, BLOCK_SIZE,BLOCK_SIZE))
                 
