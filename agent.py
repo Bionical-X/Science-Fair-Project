@@ -9,16 +9,19 @@ from helper import plot
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001 #Learning rate
-
+BLOCK_SIZE = 20
+SPEED = 1000
+N = int(640/BLOCK_SIZE*480/BLOCK_SIZE)
+N = 0
 class Agent:
 
     def __init__(self):
         self.n_games = 0
         self.epsilon = 0 #randomness
         #gamma has to be value smaller than 1.0
-        self.gamma = 0.9 # discount rate
+        self.gamma = 0.8# discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(14,625,3)
+        self.model = Linear_QNet(N+11,625,3)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         
         # model, trainer
@@ -26,78 +29,212 @@ class Agent:
     def get_state(self, game):
         head = game.snake[0]
         #20 is for BLockSIze, yes this is hard coded
-        point_l = Point(head.x-20, head.y)
-        point_r = Point(head.x+20, head.y)
-        point_u = Point(head.x, head.y - 20)
-        point_d = Point(head.x, head.y + 20)
+        point_l = Point(head.x-BLOCK_SIZE, head.y)
+        point_r = Point(head.x+BLOCK_SIZE, head.y)
+        point_u = Point(head.x, head.y - BLOCK_SIZE)
+        point_d = Point(head.x, head.y + BLOCK_SIZE)
 
-        point_l2 = Point(head.x-40, head.y)
-        point_r2 = Point(head.x+40, head.y)
-        point_u2 = Point(head.x, head.y - 40)
-        point_d2 = Point(head.x, head.y + 40)
+        
+        #point_l2 = Point(head.x-40, head.y)
+        #point_r2 = Point(head.x+40, head.y)
+        #point_u2 = Point(head.x, head.y - 40)
+        #point_d2 = Point(head.x, head.y + 40)
 
-        point_l3 = Point(head.x-60, head.y)
-        point_r3 = Point(head.x+60, head.y)
-        point_u3 = Point(head.x, head.y - 60)
-        point_d3 = Point(head.x, head.y + 60)
-
+        #point_l3 = Point(head.x-60, head.y)
+        #point_r3 = Point(head.x+60, head.y)
+        #point_u3 = Point(head.x, head.y - 60)
+        #point_d3 = Point(head.x, head.y + 60)
+        
         dir_l = game.direction == Direction.LEFT
         dir_r = game.direction == Direction.RIGHT
         dir_u = game.direction == Direction.UP
         dir_d = game.direction == Direction.DOWN
 
+        state = [False]*(int(N+11))
         # I am hard coding this for now probs fix later
-        state = [
-                # Danger straight
-                (dir_r and game.is_collision(point_r)) or
-                (dir_l and game.is_collision(point_l)) or
-                (dir_u and game.is_collision(point_u)) or
-                (dir_d and game.is_collision(point_d)),
+        if N>0:
+            for i in range(int(480/BLOCK_SIZE)):
+                for j in range(int(640/BLOCK_SIZE)):
+                    state[int(640/BLOCK_SIZE*i+j)] = game.is_collision(Point(480/BLOCK_SIZE*j,640/BLOCK_SIZE*i))
+            
+        # Danger straight
+        state[N] = ((dir_r and game.is_collision(point_r)) or
+        (dir_l and game.is_collision(point_l)) or
+        (dir_u and game.is_collision(point_u)) or
+        (dir_d and game.is_collision(point_d)))
 
-                # Danger right
-                (dir_u and game.is_collision(point_r)) or 
-                (dir_d and game.is_collision(point_l)) or 
-                (dir_l and game.is_collision(point_u)) or 
-                (dir_r and game.is_collision(point_d)),
+        # Danger right
+        state[N+1] = ((dir_u and game.is_collision(point_r)) or 
+        (dir_d and game.is_collision(point_l)) or 
+        (dir_l and game.is_collision(point_u)) or 
+        (dir_r and game.is_collision(point_d)))
 
-                # Danger left
-                (dir_d and game.is_collision(point_r)) or 
-                (dir_u and game.is_collision(point_l)) or 
-                (dir_r and game.is_collision(point_u)) or 
-                (dir_l and game.is_collision(point_d)),
+        # Danger left
+        state[N+2] = ((dir_d and game.is_collision(point_r)) or 
+        (dir_u and game.is_collision(point_l)) or 
+        (dir_r and game.is_collision(point_u)) or 
+        (dir_l and game.is_collision(point_d)))
 
-                # Danger straight
-                (dir_r and game.is_collision(point_r2)) or
-                (dir_l and game.is_collision(point_l2)) or
-                (dir_u and game.is_collision(point_u2)) or
-                (dir_d and game.is_collision(point_d2)),
+        # Danger straight
+        
+        #(dir_r and game.is_collision(point_r2)) or
+        #(dir_l and game.is_collision(point_l2)) or
+        #(dir_u and game.is_collision(point_u2)) or
+        #(dir_d and game.is_collision(point_d2)),
 
-                # Danger right
-                (dir_u and game.is_collision(point_r2)) or 
-                (dir_d and game.is_collision(point_l2)) or 
-                (dir_l and game.is_collision(point_u2)) or 
-                (dir_r and game.is_collision(point_d2)),
+        # Danger right
+        #(dir_u and game.is_collision(point_r2)) or 
+        #(dir_d and game.is_collision(point_l2)) or 
+        #(dir_l and game.is_collision(point_u2)) or 
+        #(dir_r and game.is_collision(point_d2)),
 
-                # Danger left
-                (dir_d and game.is_collision(point_r2)) or 
-                (dir_u and game.is_collision(point_l2)) or 
-                (dir_r and game.is_collision(point_u2)) or 
-                (dir_l and game.is_collision(point_d2)),
+        # Danger left
+        #(dir_d and game.is_collision(point_r2)) or 
+        #(dir_u and game.is_collision(point_l2)) or 
+        #(dir_r and game.is_collision(point_u2)) or 
+        #(dir_l and game.is_collision(point_d2)),
 
 
-                #Move direction
-                dir_l,
-                dir_r,
-                dir_u,
-                dir_d,
+        #Move direction
+        state[N+3] = (dir_l)
+        state[N+4] = (dir_r)
+        state[N+5] = (dir_u)
+        state[N+6] = (dir_d)
 
-                #food location
-                game.food.x < game.head.x, #food left
-                game.food.x > game.head.x, # food right
-                game.food.y < game.head.y, # food up
-                game.food.y > game.head.y #food down
-                ]
-        return np.array(state, dtype=int)
+        #food location
+        state[N+7] = game.food.x < game.head.x #food left
+        state[N+8] = game.food.x > game.head.x # food right
+        state[N+9] = game.food.y < game.head.y # food up
+        state[N+10] = game.food.y > game.head.y #food down
+
+
+        """
+        #Ratio of possible spaces forward
+        if dir_l:
+            t = -BLOCK_SIZE
+        elif dir_r:
+            t = BLOCK_SIZE
+        elif dir_u:
+            t = -BLOCK_SIZE
+        else:
+            t = BLOCK_SIZE
+        if dir_l or dir_r:
+            queue = [Point(game.head.x+t,game.head.y)]
+        else:
+            queue = [Point(game.head.x, game.head.y+t)]
+
+        safe = []
+        visited = [game.head]
+
+        while len(queue)!=0:
+            if (not game.is_collision(queue[0])):
+                safe.append(1)
+    
+                if  visited.count(Point(queue[0].x,queue[0].y+BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x+BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+
+                if visited.count(Point(queue[0].x,queue[0].y-BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x-BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                
+            queue.pop(0)
+        state[N+11] = len(safe)/24/32
+
+        #Ratio of possible spaces Left
+        if dir_l:
+            t = BLOCK_SIZE
+        elif dir_r:
+            t = -BLOCK_SIZE
+        elif dir_u:
+            t = -BLOCK_SIZE
+        else:
+            t = BLOCK_SIZE
+        if dir_l or dir_r:
+            queue = [Point(game.head.x ,game.head.y+t)]
+        else:
+            queue = [Point(game.head.x+t, game.head.y)]
+
+        safe = []
+        visited = [game.head]
+
+        while len(queue)!=0:
+            if not (game.is_collision(queue[0])):
+                safe.append(1)
+    
+                if  visited.count(Point(queue[0].x,queue[0].y+BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x+BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+
+                if visited.count(Point(queue[0].x,queue[0].y-BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x-BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                
+            queue.pop(0)
+        state[N+12] = len(safe)/24/32
+
+        #Ratio of possible spaces Right
+        if dir_l:
+            t = -BLOCK_SIZE
+        elif dir_r:
+            t = BLOCK_SIZE
+        elif dir_u:
+            t = BLOCK_SIZE
+        else:
+            t = -BLOCK_SIZE
+        if dir_l or dir_r:
+            queue = [Point(game.head.x ,game.head.y+t)]
+        else:
+            queue = [Point(game.head.x+t, game.head.y)]
+
+        safe = []
+        visited = [game.head]
+
+        while len(queue)!=0:
+            if not (game.is_collision(queue[0])):
+                safe.append(1)
+    
+                if  visited.count(Point(queue[0].x,queue[0].y+BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y+BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x+BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x+BLOCK_SIZE,queue[0].y))
+
+                if visited.count(Point(queue[0].x,queue[0].y-BLOCK_SIZE))==0:
+                    queue.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+                    visited.append(Point(queue[0].x,queue[0].y-BLOCK_SIZE))
+
+                if visited.count(Point(queue[0].x-BLOCK_SIZE,queue[0].y))==0:
+                    queue.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                    visited.append(Point(queue[0].x-BLOCK_SIZE,queue[0].y))
+                
+            queue.pop(0)
+        state[N+13] = len(safe)/24/32
+        """
+
+        state = np.array(state, dtype=int)
+        return state
+
+
+
 
     def remember(self, state, action, reward, next_state, game_over):
         self.memory.append((state, action, reward, next_state, game_over))
